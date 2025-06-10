@@ -52,6 +52,14 @@ jobs:
       #run: terraform init -backend-config="storage_account_name=$AZ_STO_ACC_NM" -backend-config="container_name=$AZ_CONTNR_NM" -backend-config="key=$TF_KEY" -backend-config="resource_group_name=$AZ_RG_NM"
       run: env ; terraform -chdir="terraform" init -backend-config="storage_account_name=tfstate076" -backend-config="container_name=tfstate" -backend-config="key=sashakt.terraform.tfstate" 
 
+    # Verify login was successful
+    - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
       run: terraform fmt -check
