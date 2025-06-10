@@ -43,7 +43,7 @@ jobs:
     - name: Terraform Init with Azurerm backend
       id: init
       #run: terraform init -backend-config="storage_account_name=$AZ_STO_ACC_NM" -backend-config="container_name=$AZ_CONTNR_NM" -backend-config="key=$TF_KEY" -backend-config="resource_group_name=$AZ_RG_NM"
-      run: terraform init
+      run: terraform init -chdir="terraform"
 
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
