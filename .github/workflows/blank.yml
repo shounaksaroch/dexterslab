@@ -1,36 +1,86 @@
-# This is a basic workflow to help you get started with Actions
+name: 'Terraform - IAM-IDP - Deploy Configuration to EntraID'
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+permissions:
+  contents: read
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  terraform:
+    name: 'Terraform-DextersLab'
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout - DextersLab
+      uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform - DextersLab
+      uses: hashicorp/setup-terraform@v1
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+    - name: DUMP ENV VARIABLE CONTEXT - ENV here should be 'iweoftest'
+      env:
+        ENV_JSON: ${{ toJSON(env) }}
+      run: echo "${ENV_JSON}"
+
+    - name: DUMP VARS VARIABLE CONTEXT - VARS context covers all variables set at the org/repo/environment levels in GITHUB
+      env:
+        VARS_JSON: ${{ toJSON(vars) }}
+      run: echo "${VARS_JSON}"
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init with Azurerm backend
+      id: init
+      #run: terraform init -backend-config="storage_account_name=$AZ_STO_ACC_NM" -backend-config="container_name=$AZ_CONTNR_NM" -backend-config="key=$TF_KEY" -backend-config="resource_group_name=$AZ_RG_NM"
+      run: terraform init
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: Terraform Format
+      run: terraform fmt -check
+
+    # Checks that all Terraform configuration files are valid
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate
+
+#    # Generates an execution plan for Terraform
+#    - name: Terraform Plan
+#      run: terraform plan -input=false
+#    # Generates an execution plan for Terraform
+#    - name: Terraform Plan
+#      id: plan
+#      env:
+#        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+#        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+#        ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+#        ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+#        #RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+#        #STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
+#        #CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+#      run: terraform plan -input=false -out=tfplan
+
+      # On push to "main", build or change infrastructure according to Terraform configuration files
+      # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+#    - name: Terraform Apply
+#      if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
+#      id: apply
+#      env:
+#        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+#        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+#        ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+#        #ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+#        #RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+#        #STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
+#        #CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+#      run: terraform apply "tfplan"
