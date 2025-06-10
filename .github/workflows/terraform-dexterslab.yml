@@ -42,6 +42,8 @@ jobs:
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init with Azurerm backend
       id: init
+      env:
+          use_oidc: true
       #run: terraform init -backend-config="storage_account_name=$AZ_STO_ACC_NM" -backend-config="container_name=$AZ_CONTNR_NM" -backend-config="key=$TF_KEY" -backend-config="resource_group_name=$AZ_RG_NM"
       run: terraform -chdir="terraform" init
 
